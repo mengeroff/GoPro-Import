@@ -3,14 +3,30 @@ import re
 import PIL.Image
 import datetime
 import logging
+import argparse
 
-cam_path = "Q:/DCIM"
+cam_path = ""
+log_path = ""
 
 video_file_ext = [r'.*.mp4', r'.*.thm', r'.*.lrv']
 photo_file_ext = [r'.*.jpg', r'.*.gpr']
 
 
+def parse_arguments():
+    global log_path
+    global cam_path
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cam_path", help="The path to your GoPro.")
+    parser.add_argument("log_path", help="The path, where the log files shall be saved.")
+    args = parser.parse_args()
+    cam_path = args.cam_path
+    log_path = args.log_path
+
+
 def main():
+    global cam_path
+
     for root, dirs, files in os.walk(cam_path, topdown=False):
         for name in files:
             if is_video_file(name):
@@ -64,10 +80,12 @@ def is_photo_file(name):
 
 
 if __name__ == '__main__':
+    parse_arguments()
+
     start_time = datetime.datetime.now()
 
     logging.basicConfig(
-        filename="logs/" + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
+        filename=log_path + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
         level=logging.INFO,
         format='%(levelname)s:%(message)s'
     )
