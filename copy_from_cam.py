@@ -67,7 +67,7 @@ if __name__ == '__main__':
     start_time = datetime.datetime.now()
 
     logging.basicConfig(
-        filename="logs/" + start_time.strftime("%Y-%m-%d") + '_gopro_import.log',
+        filename="logs/" + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
         level=logging.INFO,
         format='%(levelname)s:%(message)s'
     )
