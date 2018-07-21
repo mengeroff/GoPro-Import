@@ -1,8 +1,10 @@
 import os
 import re
 import PIL.Image
+import datetime
+import logging
 
-cam_path = "Q:\\DCIM"
+cam_path = "Q:/DCIM"
 
 video_file_ext = [r'.*.mp4', r'.*.thm', r'.*.lrv']
 photo_file_ext = [r'.*.jpg', r'.*.gpr']
@@ -16,31 +18,31 @@ def main():
             elif is_photo_file(name):
                 process_photo_file(root, name)
             else:
-                print("unknown file format for file " + os.path.join(root, name))
+                logging.warning("unknown file format for file " + os.path.join(root, name))
 
 
 def process_video_file(root, name):
     path = os.path.join(root, name)
-    print("video file: " + path)
+    logging.info("video file: " + path)
 
     try:
         img = PIL.Image.open(path)
         exif_data = img._getexif()
-        print(exif_data)
+        logging.debug(exif_data)
     except OSError:
-        print("Cannot identify video file " + path + ". Continuing.")
+        logging.info("Cannot identify video file " + path + ". Continuing.")
 
 
 def process_photo_file(root, name):
     path = os.path.join(root, name)
-    print("photo file: " + path)
+    logging.info("photo file: " + path)
 
     try:
         img = PIL.Image.open(path)
         exif_data = img._getexif()
-        print(exif_data)
+        logging.debug(exif_data)
     except OSError:
-        print("Cannot identify image file " + path + ". Continuing.")
+        logging.info("Cannot identify image file " + path + ". Continuing.")
 
 
 def is_video_file(name):
@@ -62,4 +64,24 @@ def is_photo_file(name):
 
 
 if __name__ == '__main__':
+    start_time = datetime.datetime.now()
+
+    logging.basicConfig(
+        filename="logs/" + start_time.strftime("%Y-%m-%d") + '_gopro_import.log',
+        level=logging.INFO,
+        format='%(levelname)s:%(message)s'
+    )
+
+    logging.info("  ___  __ ____ ____  __     __ _  _ ____  __ ____ ____ ")
+    logging.info(" / __)/  (  _ (  _ \/  \ __(  | \/ |  _ \/  (  _ (_  _)")
+    logging.info("( (_ (  O ) __/)   (  O |___)(/ \/ \) __(  O )   / )(  ")
+    logging.info(" \___/\__(__) (__\_)\__/   (__)_)(_(__)  \__(__\_)(__) ")
+    logging.info("")
+    logging.info("Start Time: " + str(start_time))
+
     main()
+
+    end_time = datetime.datetime.now()
+    logging.info("End Time: " + str(end_time))
+    duration = end_time - start_time
+    logging.info("Duration: " + str(duration))
