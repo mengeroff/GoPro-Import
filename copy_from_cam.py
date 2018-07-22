@@ -130,7 +130,7 @@ def is_photo_file(name):
     return False
 
 
-def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
+def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=50):
     """
     Call in a loop to create terminal progress bar
 
@@ -222,3 +222,5 @@ if __name__ == '__main__':
     logging.info("Processed Video Files: " + str(total_processed_videos))
     logging.info("Processed Picture Files: " + str(total_processed_pics))
     logging.info("Total Warnings:" + str(total_warnings))
+
+    time.sleep(5)
