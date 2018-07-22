@@ -24,27 +24,13 @@ total_processed_pics = 0
 total_warnings = 0
 
 
-def parse_arguments():
-    global cam_path
-    global dest_path
-    global log_path
-    global log_level
-    global db_path
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("cam_path", help="The path to your GoPro.")
-    parser.add_argument("dest_path", help="The path where you want to keep your GoPro files.")
-    parser.add_argument("--log", help="Setting of the log level. Possible values are 'DEBUG', 'INFO', 'WARNING', 'ERROR', and 'CRITICAL'")
-    args = parser.parse_args()
-    cam_path = args.cam_path
-    dest_path = args.dest_path
-    log_path = dest_path + "logs/"
-    db_path = log_path + "file_log.sqlite"
-    if args.log:
-        log_level = args.log
-
-
 def main():
+    """
+    The main part of the script. It iterates though all files in the directory and the sub-directory,
+    analyzes the files and copies them to the destination directory if required.
+
+    :return: None
+    """
     global cam_path
     global total_warnings
     global total_processed_videos
@@ -77,6 +63,15 @@ def main():
 
 
 def process_general_file(root, name):
+    """
+    The processing step of the file, independent of the fact whether it's a photo or a video file.
+    The creation date is determined and whether the file has already been copied to the destination.
+    If so, it will not be copied again.
+
+    :param root: The path to the file (without the actual file name)
+    :param name: The file name with the extension
+    :return: None
+    """
     global db_cursor
     global db_conn
 
@@ -113,6 +108,12 @@ def process_general_file(root, name):
 
 
 def is_video_file(name):
+    """
+    Check if the provided file is a video file.
+
+    :param name: The name of the file with the extension
+    :return: True, if it's a video file
+    """
     for regex in video_file_ext:
         match_obj = re.match(regex, name.lower(), re.M | re.I)
         if match_obj:
@@ -122,6 +123,12 @@ def is_video_file(name):
 
 
 def is_photo_file(name):
+    """
+    Check if the provided file is a photo file.
+
+    :param name: The name of the file with the extension
+    :return: True, if it's a photo file
+    """
     for regex in photo_file_ext:
         match_obj = re.match(regex, name.lower(), re.M | re.I)
         if match_obj:
@@ -132,15 +139,15 @@ def is_photo_file(name):
 
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=50):
     """
-    Call in a loop to create terminal progress bar
+    Call in a loop to create terminal progress bar.
 
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        bar_length  - Optional  : character length of bar (Int)
+    :param iteration: Required  : current iteration (Int)
+    :param total: Required  : total iterations (Int)
+    :param prefix: Optional  : prefix string (Str)
+    :param suffix: Optional  : suffix string (Str)
+    :param decimals: Optional  : positive number of decimals in percent complete (Int)
+    :param bar_length: Optional  : character length of bar (Int)
+    :return: None
     """
     str_format = "{0:." + str(decimals) + "f}"
     percents = str_format.format(100 * (iteration / float(total)))
@@ -155,15 +162,27 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
 
 
 def prepare_db():
+    """
+    Preparation of the database. This means the creation of the cursor and of the table, if this table does
+    not yet exist.
+
+    :return: None
+    """
     global db_conn, db_cursor
     db_conn = sqlite3.connect(db_path)
     db_cursor = db_conn.cursor()
+
     # Create table
     db_cursor.execute("""
         CREATE TABLE IF NOT EXISTS files (file_name text, date_created text, date_copied text, size real)""")
 
 
 def print_header():
+    """
+    Important printing of the project logo to the console and to the log output file.
+
+    :return: None
+    """
     logging.info("  ___  __ ____ ____  __     __ _  _ ____  __ ____ ____ ")
     logging.info(" / __)/  (  _ (  _ \/  \ __(  | \/ |  _ \/  (  _ (_  _)")
     logging.info("( (_ (  O ) __/)   (  O |___)(/ \/ \) __(  O )   / )(  ")
@@ -178,6 +197,11 @@ def print_header():
 
 
 def prepare_logging():
+    """
+    Preparation of the logging package.
+
+    :return: None
+    """
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % log_level)
@@ -187,6 +211,49 @@ def prepare_logging():
         format='%(levelname)s:%(message)s'
     )
     getattr(logging, log_level.upper())
+
+
+def parse_arguments():
+    """
+    Paring of the script arguments.
+
+    :return: None
+    """
+    global cam_path
+    global dest_path
+    global log_path
+    global log_level
+    global db_path
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cam_path", help="The path to your GoPro.")
+    parser.add_argument("dest_path", help="The path where you want to keep your GoPro files.")
+    parser.add_argument("--log", help="Setting of the log level. Possible values are 'DEBUG', 'INFO', 'WARNING', 'ERROR', and 'CRITICAL'")
+    args = parser.parse_args()
+    cam_path = args.cam_path
+    dest_path = args.dest_path
+    log_path = dest_path + "logs/"
+    db_path = log_path + "file_log.sqlite"
+    if args.log:
+        log_level = args.log
+
+
+def log_statistics():
+    """
+    Print statistics about the current job to the log file.
+
+    :return: None
+    """
+    logging.info("")
+    logging.info("-------------------------------------------------------\n")
+    logging.info("Start Time: " + str(start_time))
+    end_time = datetime.datetime.now()
+    logging.info("End Time: " + str(end_time))
+    duration = end_time - start_time
+    logging.info("Duration: " + str(duration) + "\n")
+    logging.info("Processed Video Files: " + str(total_processed_videos))
+    logging.info("Processed Picture Files: " + str(total_processed_pics))
+    logging.info("Total Warnings:" + str(total_warnings))
 
 
 if __name__ == '__main__':
@@ -212,13 +279,4 @@ if __name__ == '__main__':
     db_conn.close()
 
     # Do some important statistics
-    logging.info("")
-    logging.info("-------------------------------------------------------\n")
-    logging.info("Start Time: " + str(start_time))
-    end_time = datetime.datetime.now()
-    logging.info("End Time: " + str(end_time))
-    duration = end_time - start_time
-    logging.info("Duration: " + str(duration) + "\n")
-    logging.info("Processed Video Files: " + str(total_processed_videos))
-    logging.info("Processed Picture Files: " + str(total_processed_pics))
-    logging.info("Total Warnings:" + str(total_warnings))
+    log_statistics()
