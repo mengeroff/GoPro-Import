@@ -222,5 +222,3 @@ if __name__ == '__main__':
     logging.info("Processed Video Files: " + str(total_processed_videos))
     logging.info("Processed Picture Files: " + str(total_processed_pics))
     logging.info("Total Warnings:" + str(total_warnings))
-
-    time.sleep(5)
