@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 import re
 import datetime
 import logging
@@ -49,6 +50,15 @@ def main():
     global total_processed_videos
     global total_processed_pics
 
+    # get the total amount of files to handle
+    total_files = 0
+
+    for root, dirs, files in os.walk(cam_path, topdown=False):
+        for file in files:
+            total_files += 1
+
+    # process each file
+    progress_iter = 0
     for root, dirs, files in os.walk(cam_path, topdown=False):
         for name in files:
             if is_video_file(name):
@@ -61,6 +71,9 @@ def main():
                 if not re.match(r'.*.sav', name.lower(), re.M | re.I):
                     logging.warning("unknown file format for file " + os.path.join(root, name))
                     total_warnings += 1
+
+            progress_iter += 1
+            print_progress(progress_iter, total_files, prefix='Progress:')
 
 
 def process_general_file(root, name):
@@ -117,6 +130,30 @@ def is_photo_file(name):
     return False
 
 
+def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
+    """
+    Call in a loop to create terminal progress bar
+
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        bar_length  - Optional  : character length of bar (Int)
+    """
+    str_format = "{0:." + str(decimals) + "f}"
+    percents = str_format.format(100 * (iteration / float(total)))
+    filled_length = int(round(bar_length * iteration / float(total)))
+    bar = '█' * filled_length + '-' * (bar_length - filled_length)
+
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+
+    if iteration == total:
+        sys.stdout.write('\n')
+    sys.stdout.flush()
+
+
 def prepare_db():
     global db_conn, db_cursor
     db_conn = sqlite3.connect(db_path)
@@ -126,11 +163,21 @@ def prepare_db():
         CREATE TABLE IF NOT EXISTS files (file_name text, date_created text, date_copied text, size real)""")
 
 
-if __name__ == '__main__':
-    parse_arguments()
+def print_header():
+    logging.info("  ___  __ ____ ____  __     __ _  _ ____  __ ____ ____ ")
+    logging.info(" / __)/  (  _ (  _ \/  \ __(  | \/ |  _ \/  (  _ (_  _)")
+    logging.info("( (_ (  O ) __/)   (  O |___)(/ \/ \) __(  O )   / )(  ")
+    logging.info(" \___/\__(__) (__\_)\__/   (__)_)(_(__)  \__(__\_)(__) \n\n")
 
-    start_time = datetime.datetime.now()
+    print("-------------------------------------------------------")
+    print("  ___  __ ____ ____  __     __ _  _ ____  __ ____ ____ ")
+    print(" / __)/  (  _ (  _ \/  \ __(  | \/ |  _ \/  (  _ (_  _)")
+    print("( (_ (  O ) __/)   (  O |___)(/ \/ \) __(  O )   / )(  ")
+    print(" \___/\__(__) (__\_)\__/   (__)_)(_(__)  \__(__\_)(__) ")
+    print("-------------------------------------------------------\n\n")
 
+
+def prepare_logging():
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % log_level)
@@ -141,23 +188,33 @@ if __name__ == '__main__':
     )
     getattr(logging, log_level.upper())
 
-    logging.info("  ___  __ ____ ____  __     __ _  _ ____  __ ____ ____ ")
-    logging.info(" / __)/  (  _ (  _ \/  \ __(  | \/ |  _ \/  (  _ (_  _)")
-    logging.info("( (_ (  O ) __/)   (  O |___)(/ \/ \) __(  O )   / )(  ")
-    logging.info(" \___/\__(__) (__\_)\__/   (__)_)(_(__)  \__(__\_)(__) ")
-    logging.info("")
-    logging.info("Start Time: " + str(start_time))
 
+if __name__ == '__main__':
+    # first off get the current time as the starting time
+    start_time = datetime.datetime.now()
+
+    # parse the arguments
+    parse_arguments()
+
+    # prepare the logging environment
+    prepare_logging()
+
+    # print the header to the log file and the console. We want to see what we're dealing with.
+    print_header()
+
+    # get the database set up
     prepare_db()
 
+    # Everything prepared? Good. Here comes the main part.
     main()
 
     # close the database
     db_conn.close()
 
-    # Statistics
+    # Do some important statistics
     logging.info("")
     logging.info("-------------------------------------------------------\n")
+    logging.info("Start Time: " + str(start_time))
     end_time = datetime.datetime.now()
     logging.info("End Time: " + str(end_time))
     duration = end_time - start_time
