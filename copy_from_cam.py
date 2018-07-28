@@ -81,15 +81,17 @@ def process_general_file(root, name):
     date_created = datetime.datetime.strptime(time.ctime(os.path.getctime(path)), "%a %b %d %H:%M:%S %Y")
     date_created = date_created.strftime("%Y-%m-%d")
 
-    # create folder with date
+    # determine destination path
     directory = dest_path + str(date_created)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
 
     # check if file has already been copied
     db_cursor.execute("SELECT EXISTS(SELECT 1 FROM files WHERE file_name = ? AND date_created = ?)", (name, date_created,))
     data = db_cursor.fetchall()
     if data[0][0] == 0:
+        # create folder with date
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         # copy file
         dest = directory + "/" + name
         logging.info("Copying file from %s to %s" % (path, dest))
