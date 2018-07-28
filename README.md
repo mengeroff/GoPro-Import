@@ -6,10 +6,10 @@ Importing of GoPro media files to your local machine made easy.
 
 ## Code Example
 
-Simply run he following command in the command line:
+Simply run the following command in the command line:
 
 ```cmd
-python copy_from_cam.py Q:/DCIM E:/GoPro/ --log=INFO
+python copy_from_cam.py <PATH_TO_YOUR_GOPRO> <DESTINATION_PATH> --log=INFO
 ```
 
 ## Motivation
