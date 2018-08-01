@@ -8,6 +8,8 @@ import argparse
 from shutil import copyfile
 import sqlite3
 
+import db_helper
+
 cam_path = ""
 dest_path = ""
 log_path = ""
@@ -35,13 +37,22 @@ def main():
     global total_warnings
     global total_processed_videos
     global total_processed_pics
+    global db_cursor
 
     # get the total amount of files to handle
     total_files = 0
+    files_to_copy = []
 
     for root, dirs, files in os.walk(cam_path, topdown=False):
         for file in files:
-            total_files += 1
+            path = os.path.join(root, file)
+            logging.debug("file: " + path)
+
+            date_created = datetime.datetime.strptime(time.ctime(os.path.getctime(path)), "%a %b %d %H:%M:%S %Y")
+            date_created = date_created.strftime("%Y-%m-%d")
+
+            if db_helper.file_found(file, date_created, db_cursor):
+                files_to_copy.append(file)
 
     # process each file
     progress_iter = 0
@@ -74,12 +85,6 @@ def process_general_file(root, name):
     """
     global db_cursor
     global db_conn
-
-    path = os.path.join(root, name)
-    logging.debug("file: " + path)
-
-    date_created = datetime.datetime.strptime(time.ctime(os.path.getctime(path)), "%a %b %d %H:%M:%S %Y")
-    date_created = date_created.strftime("%Y-%m-%d")
 
     # determine destination path
     directory = dest_path + str(date_created)
@@ -256,6 +261,16 @@ def log_statistics():
     logging.info("Processed Video Files: " + str(total_processed_videos))
     logging.info("Processed Picture Files: " + str(total_processed_pics))
     logging.info("Total Warnings:" + str(total_warnings))
+
+    print("")
+    print("-------------------------------------------------------\n")
+    print("Start Time: " + str(start_time))
+    print("End Time: " + str(end_time))
+    print("Duration: " + str(duration) + "\n")
+    print("Processed Video Files: " + str(total_processed_videos))
+    print("Processed Picture Files: " + str(total_processed_pics))
+    print("Total Warnings:" + str(total_warnings))
+
 
 
 if __name__ == '__main__':
