@@ -1,0 +1,2 @@
+sonar.projectKey=gopro_import
+sonar.sources=.
