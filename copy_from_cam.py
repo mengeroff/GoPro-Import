@@ -10,9 +10,6 @@ import sqlite3
 
 import db_helper
 
-LOG_PATH = ""
-LOG_LEVEL = "INFO"
-
 class DbInfo(object):
     def __init__(self, db_cursor, db_conn):
         self._db_cursor = db_cursor
@@ -361,6 +358,10 @@ def log_statistics(cam_info):
 if __name__ == '__main__':
     # first off get the current time as the starting time
     start_time = datetime.datetime.now()
+
+    # initialize values for logging
+    LOG_PATH = ""
+    LOG_LEVEL = "INFO"
 
     # parse the arguments
     cam_info = parse_arguments()
