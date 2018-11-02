@@ -10,6 +10,20 @@ import sqlite3
 
 import db_helper
 
+class LoggingHelper(object):
+    def __init(self, log_level, log_path):
+        self._log_level = log_level
+        self._log_path = log_path
+
+    @property
+    def log_level(self):
+        return self._log_level
+    
+    @property
+    def log_path(self):
+        return self._log_path
+
+
 class DbInfo(object):
     def __init__(self, db_cursor, db_conn):
         self._db_cursor = db_cursor
@@ -292,22 +306,22 @@ def prepare_logging():
 
     :return: None
     """
-    numeric_level = getattr(logging, LOG_LEVEL.upper(), None)
+    numeric_level = getattr(logging, logging_helper.log_level.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: %s' % LOG_LEVEL)
+        raise ValueError('Invalid log level: %s' % logging_helper.log_level)
     logging.basicConfig(
-        filename=LOG_PATH + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
+        filename=logging_helper.log_path + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
         level=numeric_level,
         format='%(levelname)s:%(message)s'
     )
-    getattr(logging, LOG_LEVEL.upper())
+    getattr(logging, logging_helper.log_level.upper())
 
 
 def parse_arguments():
     """
     Paring of the script arguments.
 
-    :return: CamInfo class object
+    :return: CamInfo class object and LoggingHelper object
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("cam_path", required=True, help="The path to your GoPro.")
@@ -316,14 +330,18 @@ def parse_arguments():
                         help="Setting of the log level. Possible values are 'DEBUG', 'INFO', 'WARNING', 'ERROR', and 'CRITICAL'")
     args = parser.parse_args()
 
-    LOG_PATH = args.dest_path + "logs/"
-    db_path = LOG_PATH + "file_log.sqlite"
+    log_path = args.dest_path + "logs/"
+    db_path = log_path + "file_log.sqlite"
     cam_info = CamInfo(args.cam_path, args.dest_path, db_path)
-    
-    if args.log:
-        LOG_LEVEL = args.log
 
-    return cam_info
+    log_level = ""
+        
+    if args.log:
+        log_level = args.log
+
+    logging_helper = LoggingHelper(log_level, log_path)
+
+    return cam_info, logging_helper
 
 
 def log_statistics(cam_info):
@@ -359,12 +377,8 @@ if __name__ == '__main__':
     # first off get the current time as the starting time
     start_time = datetime.datetime.now()
 
-    # initialize values for logging
-    LOG_PATH = ""
-    LOG_LEVEL = "INFO"
-
     # parse the arguments
-    cam_info = parse_arguments()
+    cam_info, logging_helper = parse_arguments()
 
     # prepare the logging environment
     prepare_logging()

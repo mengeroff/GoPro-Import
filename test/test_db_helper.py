@@ -5,16 +5,12 @@ import db_helper
 
 
 class TestDbHelper(unittest.TestCase):
-    db_name = "test_db.sqlite"
-    db_conn = None
-    db_cursor = None
-
+    
     def setUp(self):
-        global db_name
-        global db_conn
-        global db_cursor
-
         # create db file
+        db_name = "test_db.sqlite"
+        db_conn = None
+        db_cursor = None
 
         open(db_name, 'a').close()
         db_conn = sqlite3.connect(db_name)
@@ -28,16 +24,13 @@ class TestDbHelper(unittest.TestCase):
         )
 
     def tearDown(self):
-        global db_name
-        global db_cursor
-        global db_conn
+        db_name = "test_db.sqlite"
 
         # remove db_file
         os.remove(db_name)
 
     def test_file_found(self):
-        global db_cursor
-        global db_conn
+        db_cursor = None
 
         file = "test_file"
         date_created = "2018-08-10"
