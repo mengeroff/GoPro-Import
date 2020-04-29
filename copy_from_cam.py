@@ -16,8 +16,8 @@ db_path = ""
 db_cursor = None
 db_conn = None
 
-video_file_ext = [r'.*.mp4', r'.*.thm', r'.*.lrv']
-photo_file_ext = [r'.*.jpg', r'.*.gpr']
+video_file_ext = [r'.*.MP4']
+photo_file_ext = [r'.*.JPG']
 
 total_processed_videos = 0
 total_processed_pics = 0
