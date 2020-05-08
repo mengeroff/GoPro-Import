@@ -16,12 +16,20 @@ db_path = ""
 db_cursor = None
 db_conn = None
 
-video_file_ext = [r'.*.mp4', r'.*.thm', r'.*.lrv']
-photo_file_ext = [r'.*.jpg', r'.*.gpr']
+video_file_ext = [r'.*.MP4']
+photo_file_ext = [r'.*.JPG']
 
 total_processed_videos = 0
 total_processed_pics = 0
 total_warnings = 0
+
+
+def ensure_dir(f):
+    d = os.path.dirname(f)
+    if not os.path.exists(d):
+        os.makedirs(d)
+
+    return os.path.exists(f)
 
 
 def main():
@@ -55,7 +63,8 @@ def main():
                 total_processed_pics += 1
             else:
                 if not re.match(r'.*.sav', name.lower(), re.M | re.I):
-                    logging.warning("unknown file format for file " + os.path.join(root, name))
+                    logging.warning(
+                        "unknown file format for file " + os.path.join(root, name))
                     total_warnings += 1
 
             progress_iter += 1
@@ -78,14 +87,16 @@ def process_general_file(root, name):
     path = os.path.join(root, name)
     logging.debug("file: " + path)
 
-    date_created = datetime.datetime.strptime(time.ctime(os.path.getctime(path)), "%a %b %d %H:%M:%S %Y")
+    date_created = datetime.datetime.strptime(
+        time.ctime(os.path.getctime(path)), "%a %b %d %H:%M:%S %Y")
     date_created = date_created.strftime("%Y-%m-%d")
 
     # determine destination path
     directory = dest_path + str(date_created)
 
     # check if file has already been copied
-    db_cursor.execute("SELECT EXISTS(SELECT 1 FROM files WHERE file_name = ? AND date_created = ?)", (name, date_created,))
+    db_cursor.execute(
+        "SELECT EXISTS(SELECT 1 FROM files WHERE file_name = ? AND date_created = ?)", (name, date_created,))
     data = db_cursor.fetchall()
     if data[0][0] == 0:
         # create folder with date
@@ -106,7 +117,8 @@ def process_general_file(root, name):
                           % (name, date_created, datetime.datetime.now().strftime("%Y-%m-%d"), file_size_mb))
         db_conn.commit()
     else:
-        logging.info("File %s already exists in destination %s. Skipping." % (path, directory))
+        logging.info(
+            "File %s already exists in destination %s. Skipping." % (path, directory))
 
 
 def is_video_file(name):
@@ -156,7 +168,8 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
     filled_length = int(round(bar_length * iteration / float(total)))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+    sys.stdout.write('\r%s |%s| %s%s %s' %
+                     (prefix, bar, percents, '%', suffix)),
 
     if iteration == total:
         sys.stdout.write('\n')
@@ -208,7 +221,8 @@ def prepare_logging():
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % log_level)
     logging.basicConfig(
-        filename=log_path + start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
+        filename=log_path +
+        start_time.strftime("%Y-%m-%d-%H%M%S") + '_gopro_import.log',
         level=numeric_level,
         format='%(levelname)s:%(message)s'
     )
@@ -229,13 +243,16 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("cam_path", help="The path to your GoPro.")
-    parser.add_argument("dest_path", help="The path where you want to keep your GoPro files.")
-    parser.add_argument("--log", help="Setting of the log level. Possible values are 'DEBUG', 'INFO', 'WARNING', 'ERROR', and 'CRITICAL'")
+    parser.add_argument(
+        "dest_path", help="The path where you want to keep your GoPro files.")
+    parser.add_argument(
+        "--log", help="Setting of the log level. Possible values are 'DEBUG', 'INFO', 'WARNING', 'ERROR', and 'CRITICAL'")
     args = parser.parse_args()
     cam_path = args.cam_path
     dest_path = args.dest_path
     log_path = dest_path + "logs/"
     db_path = log_path + "file_log.sqlite"
+    ensure_dir(log_path)
     if args.log:
         log_level = args.log
 
